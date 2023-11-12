@@ -18,9 +18,10 @@ namespace Kpp
         /** @brief Token's type */
         enum class Type
         {
+            Undefined,
             Word,
-            Operator,
             Literal,
+            Operator,
             Comment
         };
 
@@ -48,10 +49,7 @@ public:
     {
         None, // No error
         Exhausted, // No more data in input stream
-        InvalidStringLiteral, // String literal is not valid
-        InvalidNumericLiteral, // Numeric literal is not valid
-        InvalidOperator, // Operator is not valid
-        InvalidWord, // Word is not valid
+        InfiniteStringLiteral, // String literal is not valid
     };
 
     /** @brief A helpful structure that concatenates a token and an error */
@@ -70,9 +68,8 @@ private:
     [[nodiscard]] Error tokenize(Token &output) noexcept;
 
     /** @brief Tokenize string literal
-     *  @param delimiter is the unicode character ending the string literal
-    */
-    [[nodiscard]] Error tokenizeStringLiteral(Token &output, const std::uint32_t delimiter) noexcept;
+     *  @param firstUnicode is the unicode character beginning and thus ending the string literal */
+    [[nodiscard]] Error tokenizeStringLiteral(Token &output, const std::uint32_t firstUnicode) noexcept;
 
     /** @brief Tokenize numeric literal */
     [[nodiscard]] Error tokenizeNumericLiteral(Token &output, const std::uint32_t firstUnicode) noexcept;
@@ -84,24 +81,14 @@ private:
     [[nodiscard]] Error tokenizeWord(Token &output, const std::uint32_t firstUnicode) noexcept;
 
 
-    /** @brief Get next decoded character from input cache */
-    [[nodiscard]] std::uint32_t getNextDecodedChar(void) noexcept;
+    /** @brief Traverse decoded characters until parameter callback returns false
+     *  @param ConsumeLastChar If true, the traverse will consume the last character refused by the callback */
+    template<bool ConsumeLastChar = false, std::invocable<std::uint32_t> Callback>
+    void traverseCharacters(Callback &&callback) noexcept;
 
-    /** @brief Get next raw character from input cache */
-    [[nodiscard]] inline char peekNextRawChar(void) const noexcept { return *_head; }
 
-
-    /** @brief Check if unicode is a space */
-    [[nodiscard]] bool isSpace(const std::uint32_t unicode) const noexcept;
-
-    /** @brief Check if unicode is a digit */
-    [[nodiscard]] bool isDigit(const std::uint32_t unicode) const noexcept;
-
-    /** @brief Check if unicode is a literal delimiter */
-    [[nodiscard]] bool isLiteralDelimiter(const std::uint32_t unicode) const noexcept;
-
-    /** @brief Check if unicode is an operator */
-    [[nodiscard]] bool isOperator(const std::uint32_t unicode) const noexcept;
+    /** @brief Get the distance from parameter data to current head */
+    [[nodiscard]] inline std::uint32_t distanceToHead(const char * const data) noexcept { return std::uint32_t(std::distance(data, _head)); }
 
 
     const char *_head {};
@@ -109,3 +96,11 @@ private:
     std::uint32_t _line {};
     std::uint32_t _column {};
 };
+
+
+#include <iosfwd>
+
+/** @brief Ostream compatibility */
+std::ostream &operator<<(std::ostream &os, const Kpp::Token &token) noexcept;
+std::ostream &operator<<(std::ostream &os, const Kpp::Token::Type &token) noexcept;
+std::ostream &operator<<(std::ostream &os, const Kpp::Lexer::Error &error) noexcept;
