@@ -204,7 +204,7 @@ Lexer::Error Lexer::tokenizeNumericLiteral(Token &output, const std::uint32_t fi
         if (!hasDot & (unicode == '.')) [[unlikely]] {
             hasDot = true;
             return true;
-        } else if (IsDigit(unicode) | (unicode == '\''))
+        } else if (IsDigit(unicode))
             return true;
         return false;
     });
