@@ -1,66 +1,91 @@
 #pragma once
 
-#include "Base.hpp"
+#include "Lexer.hpp"
 
-#include <string_view>
-#include <vector>
+#include <variant>
 
 namespace Kpp
 {
-    class Lexer;
+    class Parser;
 
-    /** @brief A token is the result of Lexer tokenize function
-     *  @warning Do not use a token's data if the input used to build it has been destroyed */
-    struct alignas_eighth_cacheline Token
+    /** @brief A literal */
+    struct Literal
     {
-        /** @brief Token type */
+
+    };
+
+    /** @brief An identifier */
+    struct Identifier
+    {
+        struct Type
+        {
+
+        };
+    };
+
+    /** @brief A statement */
+    struct Statement
+    {
+        struct Qualified
+
+    };
+
+    /** @brief An expression */
+    struct Expression
+    {
+
+    };
+
+    /** @brief A declaration */
+    struct Declaration
+    {
+
+    };
+
+    // Undefined,
+    // Expression,
+    // Identifier,
+    // Declaration,
+    // InspectExpression,
+    // Literal,
+
+    /** @brief Parser node */
+    struct PrimaryNode
+    {
+        /** @brief Node type */
         enum class Type
         {
             Undefined,
-            Word,
+            Expression,
+            Identifier,
+            Declaration,
+            InspectExpression,
             Literal,
-            Operator,
-            Comment
         };
-
-        Type type;
-        std::uint32_t line;
-        std::uint32_t column;
-        std::uint32_t length;
-        const char *data;
-
-        /** @brief Get token string */
-        [[nodiscard]] constexpr std::string_view string(void) const noexcept { return std::string_view(data, length); }
     };
-    static_assert_alignof(Token, CacheLineEighthSize);
-    static_assert_sizeof(Token, CacheLineEighthSize * 3);
-
-    /** @brief A list of tokens */
-    using Tokens = std::vector<Token>;
 }
 
-/** @brief Lexer parses a string into an array of tokens */
-class Kpp::Lexer
+/** @brief Parser build an abstract syntax tree (Node) from a list of tokens */
+class Kpp::Parser
 {
 public:
-    /** @brief Lexer specific errors */
+    /** @brief Parser specific errors */
     enum class Error
     {
         None, // No error
-        Exhausted, // No more data in input stream
-        InfiniteStringLiteral, // String literal is not valid
     };
 
-    /** @brief A helpful structure that concatenates a token and an error */
-    struct TokenError
+    /** @brief A helpful structure that concatenates a node and an error */
+    struct NodeError
     {
-        Token token {};
+        Node *node {};
         Error error {};
     };
 
-    /** @brief Tokenize string input into parameter token list
-     *  @warning All tokens are tied to the input */
-    [[nodiscard]] TokenError tokenize(const std::string_view &input, Tokens &output) noexcept;
+    /** @brief Parse token list input into the output AST root node parameter
+     *  @warning All nodes are tied to the input tokens
+     *  @note The output will get overwrited */
+    [[nodiscard]] NodeError parse(const Tokens &input, Node &output) noexcept;
 
 private:
     /** @brief Tokenize input cache into parameter token */
@@ -100,6 +125,6 @@ private:
 #include <iosfwd>
 
 /** @brief Ostream compatibility */
-std::ostream &operator<<(std::ostream &os, const Kpp::Token &token) noexcept;
-std::ostream &operator<<(std::ostream &os, const Kpp::Token::Type &type) noexcept;
+std::ostream &operator<<(std::ostream &os, const Kpp::Node &node) noexcept;
+std::ostream &operator<<(std::ostream &os, const Kpp::Node::Type &type) noexcept;
 std::ostream &operator<<(std::ostream &os, const Kpp::Lexer::Error &error) noexcept;
